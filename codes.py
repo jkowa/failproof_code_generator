@@ -2,8 +2,6 @@ import Levenshtein as l
 from random import randint
 from pprint import pprint
 import unittest
-from IPython import embed
-import gc
 
 class CodeGenerator():
     def __init__(self, code_len, min_dist, max_codes_cnt):
@@ -16,13 +14,11 @@ class CodeGenerator():
         self.code_len = code_len
         self.min_dist = min_dist
         self.max_codes_cnt = max_codes_cnt
+        self.chars_digits = "1234567890"
+        self.chars_uppercase_letters = "ABCDEFGHIJKLMNOPQRTUVWXYZ"
 
         for i in range(0,self.max_codes_cnt):
-            try:
-                code = self.gen_code()
-            except Exception as e:
-                print(e)
-                continue
+            code = self.gen_code()
             self.codes.append(code)
 
     def check_dist(self, new_code, min_dist):
@@ -35,7 +31,8 @@ class CodeGenerator():
     
     def gen_code(self):
         for i in range(0,1001):
-            new_code = str(self.random_with_N_digits(self.code_len))
+            # new_code = str(self.random_with_N_digits(self.code_len))
+            new_code = self.random_with_N_chars(self.code_len, self.chars_uppercase_letters)
             if len(self.check_dist(new_code, self.min_dist)) > 0:
                 continue
             else:
@@ -45,11 +42,7 @@ class CodeGenerator():
     def check_code(self, input_code, sensitivity):
         if input_code in self.codes:
             return [input_code]
-        try:
-            matches = self.check_dist(input_code, self.min_dist-sensitivity)
-        except Exception as e:
-            embed()
-            raise e
+        matches = self.check_dist(input_code, self.min_dist-sensitivity)
         return [match['code'] for match in matches]
         
     @staticmethod
@@ -57,6 +50,15 @@ class CodeGenerator():
         range_start = 10**(n-1)
         range_end = (10**n)-1
         return randint(range_start, range_end)
+
+    @staticmethod
+    def random_with_N_chars(n, char_table):
+        result = ''
+        for i in  range(0,n):
+            i = randint(0, len(char_table)-1)
+            result = result + char_table[i]
+        return result
+
 
 #--------TESTS---------
 def make_mistakes(code, n):
@@ -89,11 +91,12 @@ class TestUnitTest(unittest.TestCase):
             self.assertEqual([code],check_result)
                 
     def test_three_char_typo(self):
-        cg = CodeGenerator(14,7,4000)
+        cg = CodeGenerator(14,7,6000)
         for code in cg.codes:
             code_with_error = make_mistakes(code, 3)
             check_result = cg.check_code(code_with_error, 3)
             self.assertEqual([code],check_result)
 
 if __name__ == "__main__":
-    cg = CodeGenerator(8,5,600)
+    cg = CodeGenerator(8,5,60)
+    print(cg.codes)
